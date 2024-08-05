@@ -48,15 +48,15 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//builder.Services.AddCors(opt =>
-//{
-//    opt.AddPolicy("AllowAllHeaders", builder =>
-//    {
-//        builder.AllowAnyOrigin()
-//               .AllowAnyHeader()
-//               .AllowAnyMethod();
-//    });
-//});
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("AllowAllHeaders", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddSignalR(opts =>
 {
@@ -75,7 +75,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-//app.UseCors("AllowAllHeaders");
+app.UseCors("AllowAllHeaders");
 
 app.UseAuthentication();
 app.UseAuthorization();
