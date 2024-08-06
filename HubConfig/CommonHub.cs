@@ -1,10 +1,12 @@
 ﻿using ChatApp.Data;
 using ChatApp.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace ChatApp.HubConfig
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CommonHub: Hub
     {
         private readonly ApplicationDbContext _context;
@@ -14,7 +16,7 @@ namespace ChatApp.HubConfig
             _context = context;
         }
 
-        [Authorize]
+        
         public async Task SendMessage(string receiver, string message)
         {
             var senderUsername = Context?.User?.Identity?.Name;
@@ -38,6 +40,7 @@ namespace ChatApp.HubConfig
             }
         }
 
+        
         public override async Task OnConnectedAsync()
         {
             var username = Context?.User?.Identity?.Name;
