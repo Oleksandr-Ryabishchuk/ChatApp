@@ -1,5 +1,6 @@
 ﻿using ChatApp.Data;
 using ChatApp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace ChatApp.HubConfig
@@ -13,6 +14,7 @@ namespace ChatApp.HubConfig
             _context = context;
         }
 
+        [Authorize]
         public async Task SendMessage(string receiver, string message)
         {
             var senderUsername = Context?.User?.Identity?.Name;
@@ -36,18 +38,23 @@ namespace ChatApp.HubConfig
             }
         }
 
-        public override Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()
         {
             var username = Context?.User?.Identity?.Name;
-            Groups.AddToGroupAsync(Context.ConnectionId, username);
-            return base.OnConnectedAsync();
+
+            if (username is null)
+            {
+                throw new HubException("Unauthorized");
+            }
+            await Groups.AddToGroupAsync(Context.ConnectionId, username);
+            await base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
             var username = Context.User.Identity.Name;
-            Groups.RemoveFromGroupAsync(Context.ConnectionId, username);
-            return base.OnDisconnectedAsync(exception);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, username);
+            await base.OnDisconnectedAsync(exception);
         }
     }
 }
