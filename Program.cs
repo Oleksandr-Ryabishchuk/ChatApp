@@ -2,6 +2,8 @@ using ChatApp.Data;
 using ChatApp.HubConfig;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -25,21 +27,20 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
 });
 
-builder.Services.AddAuthentication(options =>
-{
+builder.Services.AddAuthentication(options => {
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    
-}).AddJwtBearer(options =>
-{    
+})
+    .AddJwtBearer(options =>
+{
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
+        ValidateAudience = false,
+        ValidateIssuer = false,
+        ValidateLifetime = false,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidAudiences = builder.Configuration["Jwt:Audience"]?.Split(';'),
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"].ToString()))
     };
 
@@ -53,24 +54,23 @@ builder.Services.AddAuthentication(options =>
             if (!string.IsNullOrEmpty(accessToken) &&
                 (path.StartsWithSegments("/chathub")))
             {
-                context.Token = $"Bearer {accessToken}";
+                context.Token = $"{accessToken}";
+                context.Request.Headers.Add("Authorization", context.Token);
             }
             return Task.CompletedTask;
         }
     };
 });
 
-builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("AllowAllHeaders", builder =>
     {
-        builder.WithOrigins("http://localhost:4200")
+        builder.AllowAnyOrigin()
                .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials();
+               .AllowAnyMethod();
     });
 });
 
@@ -98,6 +98,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<CommonHub>("/chathub").RequireCors("AllowAllHeaders");
+app.MapHub<CommonHub>("/chathub");
 
 app.Run();

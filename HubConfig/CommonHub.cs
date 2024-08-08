@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace ChatApp.HubConfig
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     public class CommonHub: Hub
     {
         private readonly ApplicationDbContext _context;
@@ -19,7 +19,7 @@ namespace ChatApp.HubConfig
         
         public async Task SendMessage(string receiver, string message)
         {
-            var senderUsername = Context?.User?.Identity?.Name;
+            var senderUsername = Context?.User?.Claims.FirstOrDefault().Value;
             var sender = _context.Users.SingleOrDefault(u => u.Username == senderUsername);
             var receiverUser = _context.Users.SingleOrDefault(u => u.Username == receiver);
 
@@ -43,7 +43,7 @@ namespace ChatApp.HubConfig
         
         public override async Task OnConnectedAsync()
         {
-            var username = Context?.User?.Identity?.Name;
+            var username = Context?.User?.Claims.FirstOrDefault().Value;
 
             if (username is null)
             {
