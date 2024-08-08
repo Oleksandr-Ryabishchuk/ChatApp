@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace ChatApp.HubConfig
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CommonHub: Hub
     {
         private readonly ApplicationDbContext _context;
@@ -43,7 +43,7 @@ namespace ChatApp.HubConfig
         
         public override async Task OnConnectedAsync()
         {
-            var username = Context?.User?.Claims.FirstOrDefault().Value;
+            var username = Context?.User?.Identity?.Name;
 
             if (username is null)
             {
